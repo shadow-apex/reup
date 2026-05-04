@@ -1,0 +1,8 @@
+{
+  "contract_version": "1",
+  "job_id": "550e8400-e29b-41d4-a716-446655440000",
+  "input_video_path": "D:\\\\reup-video\\\\laravel\\\\storage\\\\app\\\\private\\\\in\\\\sample.mp4",
+  "output_dir": "D:\\\\reup-video\\\\laravel\\\\storage\\\\app\\\\private\\\\out",
+  "source_language": "zh",
+  "target_language": "vi"
+}

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://reup-video.local/schemas/health-response.json",
+  "type": "object",
+  "required": ["ok", "version", "ffmpeg_available", "contract_version"],
+  "properties": {
+    "ok": { "type": "boolean" },
+    "version": { "type": "string" },
+    "ffmpeg_available": { "type": "boolean" },
+    "contract_version": { "type": "string", "const": "1" }
+  },
+  "additionalProperties": true
+}

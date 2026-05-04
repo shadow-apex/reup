@@ -1,0 +1,16 @@
+# Monorepo
+laravel/vendor/
+laravel/node_modules/
+laravel/.env
+laravel/.phpunit.result.cache
+
+worker/.env
+worker/.venv/
+worker/**/__pycache__/
+worker/**/*.egg-info/
+worker/.pytest_cache/
+worker/dist/
+worker/build/
+
+.DS_Store
+Thumbs.db

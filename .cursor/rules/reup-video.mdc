@@ -1,0 +1,20 @@
+---
+description: Reup-video execution guardrail
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# Reup Video Rule
+
+Before making substantial changes in this repository:
+
+1. Read `AGENTS.md` for product constraints, legal/policy context, and engineering guardrails.
+2. Read `PROJECT_PLAN.md` and align work to `Current_focus`.
+3. Implement only the highest-priority in-progress item unless the user explicitly reprioritizes.
+4. After each meaningful milestone, update `PROJECT_PLAN.md`:
+   - move task status (`todo`/`doing`/`done`)
+   - append a short line in `Changelog`
+   - refresh `Current_focus` for the next agent session
+5. Do not introduce automation intended to bypass platform ToS. Prefer official APIs or human-in-the-loop publish flow.
+6. Architecture is **Laravel (orchestrator) + separate local worker repo** for ML/ffmpeg. Heavy processing belongs in the worker; Laravel coordinates and persists state. If a change touches the Laravel–worker contract, update **both** sides and document it in `PROJECT_PLAN.md` / changelog.

@@ -1,0 +1,13 @@
+{
+  "contract_version": "1",
+  "job_id": "550e8400-e29b-41d4-a716-446655440000",
+  "status": "failed",
+  "message": null,
+  "output_video_path": null,
+  "error": {
+    "code": "FFMPEG_ERROR",
+    "message": "ffmpeg exited with code 1",
+    "detail": "Error opening input: No such file or directory",
+    "ffmpeg_exit_code": 1
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://reup-video.local/schemas/job-status-response.json",
+  "type": "object",
+  "required": ["contract_version", "job_id", "status"],
+  "properties": {
+    "contract_version": { "type": "string", "const": "1" },
+    "job_id": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["queued", "processing", "completed", "failed"]
+    },
+    "message": { "type": ["string", "null"] },
+    "output_video_path": { "type": ["string", "null"] },
+    "error": {
+      "type": ["object", "null"],
+      "required": ["code", "message"],
+      "properties": {
+        "code": { "type": "string" },
+        "message": { "type": "string" },
+        "detail": { "type": ["string", "null"] },
+        "ffmpeg_exit_code": { "type": ["integer", "null"] }
+      }
+    }
+  },
+  "additionalProperties": true
+}

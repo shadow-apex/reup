@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://reup-video.local/schemas/job-create-request.json",
+  "type": "object",
+  "required": ["contract_version", "job_id", "input_video_path", "output_dir"],
+  "properties": {
+    "contract_version": { "type": "string", "const": "1" },
+    "job_id": { "type": "string", "format": "uuid" },
+    "input_video_path": { "type": "string", "minLength": 1 },
+    "output_dir": { "type": "string", "minLength": 1 },
+    "source_language": { "type": "string", "default": "zh" },
+    "target_language": { "type": "string", "default": "vi" }
+  },
+  "additionalProperties": false
+}
