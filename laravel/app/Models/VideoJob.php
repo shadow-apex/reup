@@ -3,10 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class VideoJob extends Model
 {
     protected $fillable = [
+        'source_video_id',
         'job_id',
         'status',
         'input_path',
@@ -14,6 +16,11 @@ class VideoJob extends Model
         'worker_payload',
         'last_error',
     ];
+
+    public function sourceVideo(): BelongsTo
+    {
+        return $this->belongsTo(SourceVideo::class);
+    }
 
     /**
      * @return array<string, string>

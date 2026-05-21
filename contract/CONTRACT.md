@@ -51,3 +51,7 @@ Error bodies: `schemas/error-response.json`.
 ## Paths (Windows / shared disk)
 
 `input_video_path` and `output_dir` must be absolute paths readable/writable by the worker process. Laravel and worker on the same machine should use the same base (e.g. `storage/app/...`).
+
+## Source ingest (Phase 0, Laravel only)
+
+Downloading from a source URL (Douyin-first via `yt-dlp`) is **not** part of this HTTP contract. Laravel persists `source_videos` and stores files under `storage/app/private/sources/...`, then passes `input_video_path` pointing at the downloaded file when calling `POST /v1/jobs`.

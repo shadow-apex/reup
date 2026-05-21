@@ -2,7 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Models\SourceVideo;
 use App\Models\VideoJob;
+use App\Services\Download\SourceVideoStorage;
 use App\Services\VideoWorkerClient;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
@@ -11,35 +13,70 @@ use Throwable;
 
 class ProcessVideoCommand extends Command
 {
-    protected $signature = 'video:process {input : Path to input video (absolute or relative to project root)}';
+    protected $signature = 'video:process
+                            {input? : Path to input video (absolute or relative to project root)}
+                            {--source-video= : source_videos.id — uses stored file_path, no copy}';
 
-    protected $description = 'Copy input to storage, dispatch worker job, poll until completed or failed';
+    protected $description = 'Dispatch worker job for a local file or a completed source_video';
 
-    public function handle(VideoWorkerClient $client): int
+    public function handle(VideoWorkerClient $client, SourceVideoStorage $storage): int
     {
-        $raw = (string) $this->argument('input');
-        $resolved = $this->resolveInputPath($raw);
-        if ($resolved === null || ! is_file($resolved)) {
-            $this->error('Input file not found: '.$raw);
+        $sourceVideoId = $this->option('source-video');
+        $sourceVideo = null;
+        $resolved = null;
 
-            return self::FAILURE;
+        if ($sourceVideoId !== null && $sourceVideoId !== '') {
+            $sourceVideo = SourceVideo::query()->find($sourceVideoId);
+            if ($sourceVideo === null) {
+                $this->error('Source video not found: '.$sourceVideoId);
+
+                return self::FAILURE;
+            }
+            if ($sourceVideo->status !== SourceVideo::STATUS_COMPLETED || $sourceVideo->file_path === null) {
+                $this->error('Source video is not ready for processing (status='.$sourceVideo->status.')');
+
+                return self::FAILURE;
+            }
+            $resolved = realpath($sourceVideo->file_path) ?: $sourceVideo->file_path;
+            if (! is_file($resolved)) {
+                $this->error('Source video file missing: '.$sourceVideo->file_path);
+
+                return self::FAILURE;
+            }
+        } else {
+            $raw = (string) $this->argument('input');
+            if ($raw === '') {
+                $this->error('Provide {input} path or --source-video=');
+
+                return self::FAILURE;
+            }
+            $resolved = $this->resolveInputPath($raw);
+            if ($resolved === null || ! is_file($resolved)) {
+                $this->error('Input file not found: '.$raw);
+
+                return self::FAILURE;
+            }
         }
 
         $jobId = (string) Str::uuid();
-        $inDir = storage_path('app/private/in');
-        $outDir = storage_path('app/private/out');
-        File::ensureDirectoryExists($inDir);
-        File::ensureDirectoryExists($outDir);
+        $outDir = $storage->outDir();
 
-        $ext = pathinfo($resolved, PATHINFO_EXTENSION) ?: 'mp4';
-        $storedInput = $inDir.DIRECTORY_SEPARATOR.$jobId.'.'.$ext;
-        if (! @copy($resolved, $storedInput)) {
-            $this->error('Failed to copy input to '.$storedInput);
+        if ($sourceVideo !== null) {
+            $storedInput = $resolved;
+        } else {
+            $inDir = $storage->basePath().DIRECTORY_SEPARATOR.'in';
+            File::ensureDirectoryExists($inDir);
+            $ext = pathinfo($resolved, PATHINFO_EXTENSION) ?: 'mp4';
+            $storedInput = $inDir.DIRECTORY_SEPARATOR.$jobId.'.'.$ext;
+            if (! @copy($resolved, $storedInput)) {
+                $this->error('Failed to copy input to '.$storedInput);
 
-            return self::FAILURE;
+                return self::FAILURE;
+            }
         }
 
         $videoJob = VideoJob::query()->create([
+            'source_video_id' => $sourceVideo?->id,
             'job_id' => $jobId,
             'status' => 'queued',
             'input_path' => $storedInput,
