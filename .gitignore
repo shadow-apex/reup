@@ -14,3 +14,4 @@ worker/build/
 
 .DS_Store
 Thumbs.db
+reup_config.json

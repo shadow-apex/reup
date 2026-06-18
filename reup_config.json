@@ -1,6 +1,6 @@
 {
   "ai_provider": "DeepSeek",
-  "api_key": "sk-b85866b89a954a1b84ff46c89c052b65",
+  "api_key": "",
   "api_base": "https://api.deepseek.com",
   "api_model": "deepseek-chat",
   "src_lang": "zh",
