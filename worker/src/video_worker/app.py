@@ -89,6 +89,10 @@ class JobCreateRequest(BaseModel):
     output_dir: str = Field(min_length=1)
     source_language: str = "zh"
     target_language: str = "vi"
+    openai_base_url: str | None = None
+    openai_api_key: str | None = None
+    openai_model: str | None = None
+    vol_orig: float | None = None  # 0–100 percentage from GUI
 
 
 def verify_secret(
@@ -126,6 +130,11 @@ async def _process_job(job_id: str, settings: Settings) -> None:
             source_language=rec.source_language,
             target_language=rec.target_language,
             settings=settings,
+            # per-job overrides
+            openai_base_url=rec.openai_base_url,
+            openai_api_key=rec.openai_api_key,
+            openai_model=rec.openai_model,
+            vol_orig=rec.vol_orig,
         )
         await store.update(
             job_id,
@@ -177,6 +186,10 @@ async def create_job(
                 }
             },
         )
+
+    # convert vol_orig from GUI percentage (0-100) to fraction (0.0-1.0)
+    vol = body.vol_orig / 100.0 if body.vol_orig is not None else 0.15
+
     rec = JobRecord(
         job_id=jid,
         status="queued",
@@ -185,6 +198,10 @@ async def create_job(
         output_dir=body.output_dir,
         source_language=body.source_language,
         target_language=body.target_language,
+        openai_base_url=body.openai_base_url,
+        openai_api_key=body.openai_api_key,
+        openai_model=body.openai_model,
+        vol_orig=vol,
     )
     await store.upsert(rec)
     asyncio.create_task(_process_job(jid, settings))

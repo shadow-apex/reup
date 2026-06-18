@@ -9,9 +9,9 @@ class Settings(BaseSettings):
     ffmpeg_timeout_seconds: int = 3600
     pipeline_mode: str = "stub"  # stub | real
 
-    openai_base_url: str = "https://api.openai.com/v1"
+    openai_base_url: str = "https://api.deepseek.com"
     openai_api_key: str = ""
-    openai_model: str = "gpt-4o-mini"
+    openai_model: str = "deepseek-chat"
 
     whisper_model: str = "tiny"
     whisper_device: str = "cpu"

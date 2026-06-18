@@ -37,7 +37,16 @@ class SourceVideoStorage
 
     public function outDir(): string
     {
-        $path = $this->basePath().DIRECTORY_SEPARATOR.(string) config('video_storage.out_dir');
+        $configured = (string) config('video_storage.out_dir');
+
+        // Use absolute path as-is (e.g. C:\Users\Hanh\Downloads)
+        if (str_contains($configured, ':') || str_starts_with($configured, '/')) {
+            File::ensureDirectoryExists($configured);
+
+            return $configured;
+        }
+
+        $path = $this->basePath().DIRECTORY_SEPARATOR.$configured;
         File::ensureDirectoryExists($path);
 
         return $path;

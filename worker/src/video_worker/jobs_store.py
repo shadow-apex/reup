@@ -22,6 +22,10 @@ class JobRecord:
     output_dir: str = ""
     source_language: str = "zh"
     target_language: str = "vi"
+    openai_base_url: str | None = None
+    openai_api_key: str | None = None
+    openai_model: str | None = None
+    vol_orig: float = 0.15  # 0.0 – 1.0, maps from GUI percentage
 
 
 class JobStore:

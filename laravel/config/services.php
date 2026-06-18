@@ -6,12 +6,6 @@ return [
     |--------------------------------------------------------------------------
     | Third Party Services
     |--------------------------------------------------------------------------
-    |
-    | This file is for storing the credentials for third party services such
-    | as Mailgun, Postmark, AWS and more. This file provides the de facto
-    | location for this type of information, allowing packages to have
-    | a conventional file to locate the various service credentials.
-    |
     */
 
     'postmark' => [
@@ -33,6 +27,16 @@ return [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
+    ],
+
+    // ─── AI Translation (OpenAI-compatible) ───────────────────────────
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY', ''),
+        'base_url' => env('OPENAI_BASE_URL', 'https://api.deepseek.com'),
+        'model' => env('OPENAI_MODEL', 'deepseek-chat'),
+        'source_language' => env('OPENAI_SOURCE_LANG', 'zh'),
+        'target_language' => env('OPENAI_TARGET_LANG', 'vi'),
+        'vol_orig' => (int) env('OPENAI_VOL_ORIG', 15),
     ],
 
 ];

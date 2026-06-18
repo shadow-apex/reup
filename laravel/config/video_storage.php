@@ -8,7 +8,7 @@ return [
 
     'processed_dir' => 'processed',
 
-    'out_dir' => 'out',
+    'out_dir' => env('VIDEO_OUT_DIR', 'out'),
 
     'ytdlp' => [
         // Empty or "yt-dlp" = auto-detect (Windows Scripts folder, python -m yt_dlp)
