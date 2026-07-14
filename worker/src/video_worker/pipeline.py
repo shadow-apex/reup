@@ -183,12 +183,19 @@ async def translate_srt_segments(
     return make_translated_segments(segments, translations)
 
 
-async def _edge_tts_save(text: str, out_mp3: Path, voice: str, max_retries: int = 3) -> None:
+async def _edge_tts_save(
+    text: str,
+    out_mp3: Path,
+    voice: str,
+    rate: str = "+0%",
+    pitch: str = "+0Hz",
+    max_retries: int = 3,
+) -> None:
     """Try edge-tts with retries. Returns normally on success, raises on failure."""
     last_exc: Exception | None = None
     for attempt in range(max_retries):
         try:
-            communicate = edge_tts.Communicate(text, voice)
+            communicate = edge_tts.Communicate(text, voice, rate=rate, pitch=pitch)
             await communicate.save(str(out_mp3))
             return
         except Exception as e:
@@ -217,7 +224,13 @@ def _gtts_save(text: str, out_mp3: Path) -> None:
     tts.save(str(out_mp3))
 
 
-async def _tts_to_file(text: str, out_mp3: Path, voice: str) -> None:
+async def _tts_to_file(
+    text: str,
+    out_mp3: Path,
+    voice: str,
+    rate: str = "+0%",
+    pitch: str = "+0Hz",
+) -> None:
     """Generate TTS, splitting long text into chunks and concatenating via ffmpeg.
 
     Tries edge-tts first (with retries), falls back to gTTS if it fails.
@@ -229,7 +242,7 @@ async def _tts_to_file(text: str, out_mp3: Path, voice: str) -> None:
         if len(chunks) == 1:
             try:
                 if provider_label == "edge-tts":
-                    await _edge_tts_save(text, out_mp3, voice)
+                    await _edge_tts_save(text, out_mp3, voice, rate, pitch)
                 else:
                     await asyncio.to_thread(_gtts_save, text, out_mp3)
                 return True
@@ -243,7 +256,7 @@ async def _tts_to_file(text: str, out_mp3: Path, voice: str) -> None:
             for i, chunk in enumerate(chunks):
                 tmp = parent / f"chunk_{i:04d}.mp3"
                 if provider_label == "edge-tts":
-                    await _edge_tts_save(chunk, tmp, voice)
+                    await _edge_tts_save(chunk, tmp, voice, rate, pitch)
                 else:
                     await asyncio.to_thread(_gtts_save, chunk, tmp)
                 chunk_files.append(tmp)
@@ -290,6 +303,8 @@ async def _tts_segments_synced(
     out_audio: Path,
     voice: str,
     settings: Settings,
+    rate: str = "+0%",
+    pitch: str = "+0Hz",
 ) -> None:
     """Generate TTS per translated segment and place each one at its ORIGINAL
     start time on the timeline using ffmpeg's `adelay` filter, then mix all
@@ -312,7 +327,7 @@ async def _tts_segments_synced(
         chunk_paths: list[tuple[float, Path]] = []
         for i, seg in enumerate(usable):
             tmp = tdir / f"seg_{i:04d}.mp3"
-            await _tts_to_file(seg.text, tmp, voice)
+            await _tts_to_file(seg.text, tmp, voice, rate, pitch)
             chunk_paths.append((seg.start, tmp))
 
         input_args: list[str] = []
@@ -495,7 +510,7 @@ async def run_pipeline(
         with tempfile.TemporaryDirectory() as td:
             tdir = Path(td)
             narration_track = tdir / "narration_synced.wav"
-            await _tts_segments_synced(translated_segments, narration_track, settings.edge_tts_voice, settings)
+            await _tts_segments_synced(translated_segments, narration_track, settings.edge_tts_voice, settings, settings.edge_tts_rate, settings.edge_tts_pitch)
 
             def _mux() -> None:
                 _mux_video_audio_sync(input_video, narration_track, output_mp4, settings, vol_orig=orig_vol)
@@ -509,7 +524,7 @@ async def run_pipeline(
         with tempfile.TemporaryDirectory() as td:
             tdir = Path(td)
             mp3 = tdir / "narration.mp3"
-            await _tts_to_file(text_vi, mp3, settings.edge_tts_voice)
+            await _tts_to_file(text_vi, mp3, settings.edge_tts_voice, settings.edge_tts_rate, settings.edge_tts_pitch)
 
             def _stub_mux() -> None:
                 _mux_video_audio_sync(input_video, mp3, output_mp4, settings, vol_orig=orig_vol)
@@ -570,7 +585,7 @@ async def run_pipeline(
         # TTS per segment, each placed at its own timestamp, instead of one
         # continuous narration track — keeps the dubbed audio in sync with
         # both the video and the exported *_vi.srt.
-        await _tts_segments_synced(translated_segments, narration_track, settings.edge_tts_voice, settings)
+        await _tts_segments_synced(translated_segments, narration_track, settings.edge_tts_voice, settings, settings.edge_tts_rate, settings.edge_tts_pitch)
 
         def _mux() -> None:
             _mux_video_audio_sync(input_video, narration_track, output_mp4, settings, vol_orig=orig_vol)

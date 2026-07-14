@@ -1,22 +1,22 @@
 1
 00:00:00,000 --> 00:00:04,900
-Trong bình đảo hoa có một vị đảo hoa tiên, đảo hoa tiên vốn không phải tiên đó,
+Trong Bình Đảo Hoa có một vị đảo hoa tiên, đảo hoa tiên vốn không phải tiên đó,
 
 2
 00:00:04,900 --> 00:00:08,400
-hắn tiên là đảo miên là một kẻ xin không vì hệ thống trường xin.
+hắn tiên là đảo miên, là một kẻ xin không vì hệ thống trường xin.
 
 3
 00:00:08,400 --> 00:00:12,599
-Vô tình đã sống tới một nghìn năm, nhưng hiện tại vẫn chỉ là lựa khí kì.
+Vô tình đã sống tới một nghìn năm, nhưng hiện tại vẫn chỉ là Luyện Khí kỳ.
 
 4
 00:00:12,599 --> 00:00:16,100
-Anh đi, anh đi, anh nói rồi nhớ bắt một con gà máy về,
+Anh đi, anh đi, anh nói rồi nhớ bắt một con gà mái về,
 
 5
 00:00:16,100 --> 00:00:20,100
-các người cũng sống mấy chăm năm rồi, người đời sâu xử phụ có được ăn trứng hay không,
+các người cũng sống mấy trăm năm rồi, người đời sau xưng phụ có được ăn trứng hay không,
 
 6
 00:00:20,100 --> 00:00:21,100
@@ -24,11 +24,11 @@ trong trở vào các người.
 
 7
 00:00:24,100 --> 00:00:27,600
-Đá một nghìn năm rồi, con người xuất cuộc vẫn chưa thắng được sán.
+Đã một nghìn năm rồi, con người xuất cuộc vẫn chưa thắng được sán.
 
 8
 00:00:27,600 --> 00:00:33,200
-Hệ thống nhàng người ta thị trở thành công, thân khí con người lại bắt ta đi thu đồ đệ.
+Hệ thống nhà người ta thị trở thành công, thân khí con người lại bắt ta đi thu đồ đệ.
 
 9
 00:00:33,200 --> 00:00:37,200
@@ -137,4 +137,3 @@ Thế nào? Được. Người đồng ý dồi.
 35
 00:03:09,200 --> 00:03:19,200
 Từ hôm nay, người là đại địa từ của đào Minta, sư phụ có càng uống, nhất định cũng có phần trong người.
-

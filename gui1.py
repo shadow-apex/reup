@@ -19,6 +19,12 @@ from pathlib import Path
 # ─── CONFIG ───────────────────────────────────────────────────────────
 CONFIG_FILE = "reup_config.json"
 
+# Giọng edge-tts tiếng Việt hiện có. Map "tên hiển thị" -> "voice id thật".
+EDGE_VOICES = {
+    "Nam - Trầm ấm (NamMinh)": "vi-VN-NamMinhNeural",
+    "Nữ - Trẻ trung (HoaiMy)": "vi-VN-HoaiMyNeural",
+}
+
 def load_config():
     if os.path.exists(CONFIG_FILE):
         with open(CONFIG_FILE, "r", encoding="utf-8") as f:
@@ -192,6 +198,9 @@ class ReupApp(tk.Tk):
         self.src_lang=tk.StringVar(value=c.get("src_lang","zh"))
         self.tgt_lang=tk.StringVar(value=c.get("tgt_lang","vi"))
         self.vol_orig=tk.IntVar(value=c.get("vol_orig",15))
+        self.tts_voice_label=tk.StringVar(value=c.get("tts_voice_label","Nam - Trầm ấm (NamMinh)"))
+        self.tts_rate=tk.IntVar(value=c.get("tts_rate",0))     # % : -50..+50, âm = chậm hơn, dương = nhanh hơn
+        self.tts_pitch=tk.IntVar(value=c.get("tts_pitch",0))   # Hz : -50..+50, âm = trầm hơn, dương = cao hơn
         self.dl_link=tk.StringVar()
         self.cookie_file=tk.StringVar(value=c.get("cookie_file",""))
         self.out_dir=tk.StringVar(value=c.get("out_dir",os.path.expanduser("~/Videos")))
@@ -330,24 +339,39 @@ class ReupApp(tk.Tk):
         vl.pack(side="left",padx=2); tk.Label(row_v,text="%",bg=CARD,fg=SUBTEXT,font=FONT_SM).pack(side="left")
         ToolTip(row_v,"Âm gốc giữ lại. 0% = tắt tiếng gốc, chỉ còn giọng TTS")
 
+        row_voice=tk.Frame(b3,bg=CARD); row_voice.pack(fill="x",pady=1)
+        tk.Label(row_voice,text="Giọng đọc",bg=CARD,fg=SUBTEXT,font=FONT_SM,width=12,anchor="w").pack(side="left")
+        ttk.Combobox(row_voice,textvariable=self.tts_voice_label,values=list(EDGE_VOICES.keys()),
+                     state="readonly",font=FONT_BASE,width=24).pack(side="left")
+        ToolTip(row_voice,"Chọn giọng edge-tts. Giọng nam trầm thường nghe 'chuyên nghiệp/rev' hơn giọng nữ mặc định.")
+
+        row_rate=tk.Frame(b3,bg=CARD); row_rate.pack(fill="x",pady=1)
+        tk.Label(row_rate,text="Tốc độ đọc",bg=CARD,fg=SUBTEXT,font=FONT_SM,width=12,anchor="w").pack(side="left")
+        tk.Scale(row_rate,variable=self.tts_rate,from_=-50,to=50,orient="horizontal",
+                 bg=CARD,fg=TEXT,troughcolor="#13131c",activebackground=ACCENT,
+                 highlightthickness=0,bd=0,showvalue=False,sliderlength=14,length=180).pack(side="left")
+        rl=tk.Label(row_rate,textvariable=self.tts_rate,bg="#13131c",fg=TEXT,font=FONT_SM,width=3)
+        rl.pack(side="left",padx=2); tk.Label(row_rate,text="%",bg=CARD,fg=SUBTEXT,font=FONT_SM).pack(side="left")
+        ToolTip(row_rate,"Âm = đọc chậm, nhấn nhá rõ hơn (giống rev). Dương = đọc nhanh hơn. 0 = tốc độ gốc.")
+
+        row_pitch=tk.Frame(b3,bg=CARD); row_pitch.pack(fill="x",pady=1)
+        tk.Label(row_pitch,text="Cao độ",bg=CARD,fg=SUBTEXT,font=FONT_SM,width=12,anchor="w").pack(side="left")
+        tk.Scale(row_pitch,variable=self.tts_pitch,from_=-50,to=50,orient="horizontal",
+                 bg=CARD,fg=TEXT,troughcolor="#13131c",activebackground=ACCENT,
+                 highlightthickness=0,bd=0,showvalue=False,sliderlength=14,length=180).pack(side="left")
+        pl=tk.Label(row_pitch,textvariable=self.tts_pitch,bg="#13131c",fg=TEXT,font=FONT_SM,width=3)
+        pl.pack(side="left",padx=2); tk.Label(row_pitch,text="Hz",bg=CARD,fg=SUBTEXT,font=FONT_SM).pack(side="left")
+        ToolTip(row_pitch,"Âm = giọng trầm hơn (thường hợp với voice-over rev). Dương = giọng cao hơn. 0 = cao độ gốc.")
+
         # ─── 4. NỘI DUNG THUYẾT MINH + SRT ────────────────────────────
         b3b=self._sec(p,"📝 NỘI DUNG THUYẾT MINH + SRT")
         tk.Label(b3b,text="Script gốc hoặc nhập nội dung để dịch:",bg=CARD,fg=SUBTEXT,font=FONT_SM).pack(anchor="w")
         
-        # SRT buttons — 2 luồng song song:
-        #  (1) Nhập SRT gốc -> Dịch SRT bằng API
-        #  (2) Nhập thẳng SRT đã dịch sẵn (tự dịch thủ công ở ngoài) -> bỏ qua API
+        # SRT: chỉ còn 2 luồng nhập liệu, phần dịch tự động chạy ngầm khi bấm BẮT ĐẦU
         srt_btn_frame=tk.Frame(b3b,bg=CARD); srt_btn_frame.pack(fill="x",pady=(2,2))
         btn(srt_btn_frame,"📥 Nhập SRT gốc",self._import_srt,ACCENT,12,True).pack(side="left",padx=2)
-        btn(srt_btn_frame,"� Tạo SRT gốc từ video",self._create_srt_from_video,"#8b5cf6",18,True).pack(side="left",padx=2)
-        btn(srt_btn_frame,"�🌐 Dịch SRT (API)",self._translate_srt,"#0891b2",12,True).pack(side="left",padx=2)
-        btn(srt_btn_frame,"💾 Xuất SRT",self._export_srt,"#334155",10,True).pack(side="left",padx=2)
-        btn(srt_btn_frame,"🔄 Xóa SRT",self._clear_srt,"#ef4444",8,True).pack(side="left")
-
-        srt_btn_frame2=tk.Frame(b3b,bg=CARD); srt_btn_frame2.pack(fill="x",pady=(0,2))
-        btn(srt_btn_frame2,"📥 Nhập SRT ĐÃ DỊCH (bỏ qua API)",self._import_translated_srt,"#16a34a",26,True).pack(side="left",padx=2)
-        ToolTip(srt_btn_frame2,"Dùng khi bạn đã tự dịch SRT ở ngoài (ChatGPT, DeepSeek web...)\nvà chỉ muốn chương trình TTS + ghép video, không gọi API dịch nữa.")
-        
+        btn(srt_btn_frame,"📄 Tạo SRT gốc từ video",self._create_srt_from_video,"#8b5cf6",18,True).pack(side="left",padx=2)
+        btn(srt_btn_frame,"🔄 Xóa SRT",self._clear_srt,"#ef4444",8,True).pack(side="left",padx=2)
         self._script=scrolledtext.ScrolledText(b3b,height=4,bg="#0a0a12",fg=TEXT,insertbackground=TEXT,
                                                 relief="flat",font=("Consolas",8),bd=0,wrap="word")
         self._script.pack(fill="x",pady=(2,0))
@@ -355,7 +379,7 @@ class ReupApp(tk.Tk):
         self._script.config(state="normal")
         self._srt_label=tk.Label(b3b,text="SRT không được tải",bg=CARD,fg="#ef4444",font=FONT_SM)
         self._srt_label.pack(anchor="w",pady=(2,0))
-        ToolTip(self._script,"Để trống = dùng TTS mặc định\nNhập text tay = dịch cả khối, TTS 1 track liên tục\nNhập SRT + bấm '🌐 Dịch SRT' = dịch từng dòng, TTS đồng bộ đúng timestamp gốc")
+        ToolTip(self._script,"Để trống = dùng TTS mặc định\nNhập text tay = dịch cả khối, TTS 1 track liên tục\nNhập/Tạo SRT = dịch tự động từng dòng khi bấm BẮT ĐẦU, TTS đồng bộ đúng timestamp gốc")
 
         # ─── 5. OUTPUT ──────────────────────────────────────────────────
         b4=self._sec(p,"💾 XUẤT RA")
@@ -378,7 +402,7 @@ class ReupApp(tk.Tk):
                                             insertbackground=TEXT,relief="flat",
                                             font=("Consolas",8),bd=0,wrap="word")
         self.log.pack(fill="x"); self.log.config(state="disabled")
-        self._log("✅ Sẵn sàng. Chọn AI + nhập Key → chọn video → BẮT ĐẦU.\n📝 Quy trình SRT: 📥 Nhập SRT → 🌐 Dịch SRT → BẮT ĐẦU (TTS sẽ tự đồng bộ đúng timestamp gốc).")
+        self._log("✅ Sẵn sàng. Chọn AI + nhập Key → chọn video → BẮT ĐẦU.\n📝 Quy trình SRT: 📥 Nhập SRT (hoặc 📄 Tạo SRT từ video) → BẮT ĐẦU (tự động dịch + TTS đồng bộ đúng timestamp gốc).")
 
     def _sec(self,p,t,pad=(4,2)):
         f=tk.Frame(p,bg=CARD,bd=0,highlightthickness=1,highlightbackground=BORDER)
@@ -431,8 +455,13 @@ class ReupApp(tk.Tk):
             messagebox.showerror("Lỗi", f"Không thể đọc SRT: {str(e)}")
 
     def _import_srt(self):
-        """Import SRT file: keep the REAL timestamps (self._srt_segments),
-        only put the plain text into the script box as a preview/edit area."""
+        """Import SRT file: keep the REAL timestamps (self._srt_segments).
+
+        SRT đưa vào được DÙNG THẲNG luôn (không gọi API dịch) — vì đây là
+        nội dung bạn đã chuẩn bị sẵn để đọc. Chỉ khi bấm '🔄 Xóa SRT' (ô
+        script trống hẳn) thì chương trình mới quay lại dùng API dịch nội
+        dung gõ tay trong ô script.
+        """
         file = filedialog.askopenfilename(filetypes=[("SRT", "*.srt"), ("All", "*.*")])
         if not file:
             return
@@ -441,24 +470,25 @@ class ReupApp(tk.Tk):
             subs = parse_srt(file)
             ordered_idx = sorted(subs.keys())
             # ✅ Giữ nguyên start/end thật của từng dòng — KHÔNG nối thành 1 chuỗi
-            self._srt_segments = sorted([
+            segments = sorted([
                 {"start": subs[i][0], "end": subs[i][1], "text": subs[i][2]}
                 for i in ordered_idx
             ], key=lambda seg: seg["start"])
-            self._srt_segments_vi = None  # bản dịch cũ (nếu có) không còn hợp lệ
+            self._srt_segments = segments
+            self._srt_segments_vi = segments  # dùng thẳng, không qua API dịch
 
-            full_text = " ".join(seg["text"] for seg in self._srt_segments)
+            full_text = " ".join(seg["text"] for seg in segments)
             self._script.config(state="normal")
             self._script.delete("1.0", "end")
             self._script.insert("1.0", full_text)
-
             self._current_srt_zh = file
+
             self._srt_label.config(
-                text=f"✅ SRT: {os.path.basename(file)} ({len(self._srt_segments)} dòng, chưa dịch)",
+                text=f"✅ SRT: {os.path.basename(file)} ({len(segments)} dòng, sẵn sàng TTS — KHÔNG cần API)",
                 fg="#4ade80",
             )
-            self._log(f"📥 Đã nhập SRT: {os.path.basename(file)} ({len(self._srt_segments)} subtitle, giữ nguyên timestamp)")
-            self._log("   ℹ️ Bấm '🌐 Dịch SRT' để dịch từng dòng (giữ đúng thời gian gốc).")
+            self._log(f"📥 Đã nhập SRT: {os.path.basename(file)} ({len(segments)} dòng, giữ nguyên timestamp).")
+            self._log("   ✅ Dùng thẳng nội dung SRT — bỏ qua API dịch, có thể bấm BẮT ĐẦU ngay.")
         except Exception as e:
             messagebox.showerror("Lỗi", f"Không thể đọc SRT: {str(e)}")
 
@@ -539,7 +569,7 @@ class ReupApp(tk.Tk):
                     ]
 
                 self._srt_segments = srt_segments
-                self._srt_segments_vi = None
+                self._srt_segments_vi = srt_segments  # dùng thẳng, không qua API dịch
                 full_text = " ".join(seg["text"] for seg in srt_segments)
                 self._script.config(state="normal")
                 self._script.delete("1.0", "end")
@@ -566,10 +596,12 @@ class ReupApp(tk.Tk):
 
                 self._current_srt_zh = str(out_srt)
                 self._srt_label.config(
-                    text=f"✅ SRT gốc: {os.path.basename(out_srt)} ({len(srt_segments)} dòng)",
+                    text=f"✅ SRT gốc: {os.path.basename(out_srt)} ({len(srt_segments)} dòng, sẵn sàng TTS — KHÔNG cần API)",
                     fg="#4ade80",
                 )
                 self._log(f"✅ Đã tạo SRT gốc: {os.path.basename(out_srt)}")
+                self._log("   ✅ Dùng thẳng nội dung SRT — bỏ qua API dịch, có thể bấm BẮT ĐẦU ngay.")
+                self._log("   ℹ️ Nếu cần bản dịch, hãy tự dịch nội dung này (VD: dán vào ChatGPT/DeepSeek) rồi dùng '📥 Nhập SRT gốc' để nhập lại bản đã dịch.")
                 self._log(f"   📍 Lưu tại: {out_srt}")
             except Exception as e:
                 # ✅ FIX: chuyển exception thành chuỗi NGAY trong khối except,
@@ -741,6 +773,8 @@ class ReupApp(tk.Tk):
         self._current_srt_zh = None
         self._srt_segments = None
         self._srt_segments_vi = None
+        self._script.config(state="normal")
+        self._script.delete("1.0", "end")
         self._srt_label.config(text="SRT không được tải", fg="#ef4444")
         self._log("🔄 Đã xóa SRT")
 
@@ -880,11 +914,13 @@ class ReupApp(tk.Tk):
         và retry/bỏ qua như bình thường, thay vì treo cả chương trình.
         """
         import edge_tts
-        voice = "vi-VN-HoaiMyNeural"
+        voice = EDGE_VOICES.get(self.tts_voice_label.get(), "vi-VN-NamMinhNeural")
+        rate = f"{self.tts_rate.get():+d}%"
+        pitch = f"{self.tts_pitch.get():+d}Hz"
         last_exc = None
         for attempt in range(max_retries):
             try:
-                communicate = edge_tts.Communicate(text, voice)
+                communicate = edge_tts.Communicate(text, voice, rate=rate, pitch=pitch)
                 await asyncio.wait_for(
                     communicate.save(str(out_mp3)), timeout=per_call_timeout
                 )
@@ -978,7 +1014,7 @@ class ReupApp(tk.Tk):
                 elif not self.api_key.get().strip():
                     raise RuntimeError(
                         "Đã có SRT gốc nhưng chưa dịch và chưa nhập API Key. "
-                        "Nhập API Key rồi bấm '🌐 Dịch SRT' (hoặc bấm BẮT ĐẦU lại)."
+                        "Nhập API Key rồi bấm BẮT ĐẦU lại."
                     )
                 else:
                     self._log("   🌐 Có SRT gốc nhưng chưa dịch — tự động dịch trước khi TTS…")
@@ -1102,7 +1138,9 @@ class ReupApp(tk.Tk):
                      "api_base":self.api_base.get(),"api_model":self.api_model.get(),
                      "src_lang":self.src_lang.get(),"tgt_lang":self.tgt_lang.get(),
                      "vol_orig":self.vol_orig.get(),"out_dir":self.out_dir.get(),
-                     "out_name":self.out_name.get()})
+                     "out_name":self.out_name.get(),
+                     "tts_voice_label":self.tts_voice_label.get(),
+                     "tts_rate":self.tts_rate.get(),"tts_pitch":self.tts_pitch.get()})
         self._log("💾 Đã lưu cấu hình!"); self.status.set("Đã lưu")
 
 if __name__=="__main__":

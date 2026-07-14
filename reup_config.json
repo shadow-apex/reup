@@ -5,7 +5,10 @@
   "api_model": "deepseek-chat",
   "src_lang": "zh",
   "tgt_lang": "vi",
-  "vol_orig": 20,
-  "out_dir": "C:\\Users\\Hanh/Videos",
-  "out_name": "{title}_{n}"
+  "vol_orig": 41,
+  "out_dir": "C:/Users/vanha/Videos",
+  "out_name": "{title}_{n}",
+  "tts_voice_label": "Nam - Trầm ấm (NamMinh)",
+  "tts_rate": 10,
+  "tts_pitch": 6
 }

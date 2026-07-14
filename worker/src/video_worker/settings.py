@@ -17,7 +17,9 @@ class Settings(BaseSettings):
     whisper_device: str = "cpu"
     whisper_compute_type: str = "int8"
 
-    edge_tts_voice: str = "vi-VN-HoaiMyNeural"
+    edge_tts_voice: str = "vi-VN-NamMinhNeural"
+    edge_tts_rate: str = "-8%"     # âm = đọc chậm hơn, nhấn nhá rõ hơn (giống giọng rev)
+    edge_tts_pitch: str = "-5Hz"   # âm = giọng trầm hơn
 
 
 def get_settings() -> Settings:
