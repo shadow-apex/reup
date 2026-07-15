@@ -5,10 +5,11 @@
   "api_model": "deepseek-chat",
   "src_lang": "zh",
   "tgt_lang": "vi",
-  "vol_orig": 41,
+  "vol_orig": 31,
+  "tts_vol": 150,
   "out_dir": "C:/Users/vanha/Videos",
   "out_name": "{title}_{n}",
-  "tts_voice_label": "Nam - Trầm ấm (NamMinh)",
-  "tts_rate": 10,
-  "tts_pitch": 6
+  "tts_voice_label": "Nữ - Trẻ trung (HoaiMy)",
+  "tts_rate": 5,
+  "tts_pitch": 10
 }
